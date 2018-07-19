@@ -71,13 +71,15 @@ const staticHandler: RequestHandler = (req, res) => {
   });
 };
 
-const handler = router(
+export const handler = router(
   post('/graphql', apolloHandler),
   get('/graphql', apolloHandler),
   get('/static/*', staticHandler),
   get('*', viewHandler),
 );
 
-const port = 3000;
-micro(handler).listen(port);
-console.log(`listening at http://localhost:${port}`);
+if (require.main === module) {
+  const port = 3000;
+  micro(handler).listen(port);
+  console.log(`listening at http://localhost:${port}`);
+}
