@@ -9,7 +9,7 @@ function getApolloState(): NormalizedCacheObject {
   const elements = document.getElementsByTagName('meta');
   for (let i = 0; i < elements.length; i += 1) {
     if (elements[i].name === 'apollo-state') {
-      return JSON.parse(atob(elements[i].content));
+      return JSON.parse(elements[i].content);
     }
   }
   return {};

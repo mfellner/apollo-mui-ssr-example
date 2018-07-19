@@ -51,7 +51,7 @@ const viewHandler: RequestHandler = async (req, res) => {
 
   const view = React.createElement(View, {
     title: pkg.name,
-    author: pkg.author,
+    author: pkg.author.name,
     description: pkg.description,
     apolloState,
     css,

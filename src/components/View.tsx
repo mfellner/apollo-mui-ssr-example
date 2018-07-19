@@ -10,7 +10,7 @@ type Props = {
 };
 
 function encodeJSON(data: object): string {
-  return new Buffer(JSON.stringify(data)).toString('base64');
+  return JSON.stringify(data);
 }
 
 export default class View extends React.Component<Props> {

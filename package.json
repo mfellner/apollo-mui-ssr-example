@@ -2,7 +2,11 @@
   "name": "apollo-mui-ssr-example",
   "version": "1.0.0",
   "license": "MIT",
-  "author": "Maximilian Fellner <max.fellner@gmail.com.com>",
+  "author": {
+    "name": "Maximilian Fellner",
+    "email": "max.fellner@gmail.com.com",
+    "url": "https://maximilianfellner.eu"
+  },
   "description": "Example of Apollo GraphQL, Material UI and SSR.",
   "scripts": {
     "webpack:development": "webpack --mode development",
