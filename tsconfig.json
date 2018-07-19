@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "target": "es2018",
+    "strict": true,
+    "sourceMap": true,
+    "esModuleInterop": true,
+    "jsx": "react",
+    "lib": [
+      "dom", "es2018", "esnext.asynciterable"
+    ]
+  },
+  "include": [
+    "src/**/*"
+  ]
+}

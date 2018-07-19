@@ -1,0 +1,9 @@
+{
+  "execMap": {
+    "ts": "ts-node --files -P tsconfig.json --cacheDirectory .cache/"
+  },
+  "watch": [
+    "src/"
+  ],
+  "ext": "ts,tsx"
+}
