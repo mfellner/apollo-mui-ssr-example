@@ -3,34 +3,14 @@ import CardActions from '@material-ui/core/CardActions';
 import CardContent from '@material-ui/core/CardContent';
 import CardHeader from '@material-ui/core/CardHeader';
 import LinearProgress from '@material-ui/core/LinearProgress';
-import gql from 'graphql-tag';
 import React from 'react';
 import { Mutation, Query } from 'react-apollo';
+import { createTodoMutation, todoQuery } from '../graphql/queries';
 import { Todo } from '../graphql/types';
 import Container from './Container';
 import Error from './Error';
 import TodoContainer from './TodoContainer';
 import TodoForm from './TodoForm';
-
-const todoQuery = gql`
-  query Todos {
-    todos {
-      id
-      text
-      completed
-    }
-  }
-`;
-
-const createTodoMutation = gql`
-  mutation CreateTodo($text: String!) {
-    createTodo(text: $text) {
-      id
-      text
-      completed
-    }
-  }
-`;
 
 export default class Application extends React.Component {
   public componentDidMount() {
@@ -55,19 +35,31 @@ export default class Application extends React.Component {
                 if (loading) {
                   return <LinearProgress />;
                 }
-                const { todos = [] } = data || {};
-                return <TodoContainer todos={todos} />;
+                return <TodoContainer todos={data!.todos} />;
               }}
             </Query>
           </CardContent>
           <CardActions>
-            <Mutation<Todo, { text: string }> mutation={createTodoMutation}>
+            <Mutation<{ createTodo: Todo }, { text: string }>
+              mutation={createTodoMutation}
+              update={(proxy, { data, errors }) => {
+                if (errors) {
+                  return;
+                }
+                const oldData = proxy.readQuery<{ todos: Todo[] }>({ query: todoQuery });
+                const newTodo = data!.createTodo!;
+                const newData = { todos: [...oldData!.todos, newTodo] };
+                proxy.writeQuery({
+                  query: todoQuery,
+                  data: newData,
+                });
+              }}
+            >
               {createTodo => (
                 <TodoForm
                   onSubmit={async text => {
                     const result = await createTodo({
                       variables: { text },
-                      refetchQueries: ['Todos'],
                     });
                     return result ? (result.errors ? result.errors[0] : null) : null;
                   }}
