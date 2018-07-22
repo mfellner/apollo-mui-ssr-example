@@ -3,9 +3,9 @@ import CircularProgress from '@material-ui/core/CircularProgress';
 import { StyleRulesCallback, WithStyles, withStyles } from '@material-ui/core/styles';
 import TextField from '@material-ui/core/TextField';
 import PlaylistAddIcon from '@material-ui/icons/PlaylistAdd';
+import gql from 'graphql-tag';
 import React from 'react';
 import { Mutation } from 'react-apollo';
-import { createTodoMutation, setErrorMutation, todoQuery } from '../graphql/queries';
 import { Todo } from '../graphql/types';
 import { runMutation } from '../graphql/utils';
 
@@ -56,26 +56,42 @@ class TodoForm extends React.Component<Props, State> {
         <TextField
           error={!!error}
           label={error || 'enter text…'}
+          disabled={sending}
           className={classes.textField}
           value={text}
           onChange={this.onTextChanged}
         />
         <Mutation<{ createTodo: Todo }, { text: string }>
-          mutation={createTodoMutation}
+          mutation={gql`
+            mutation CreateTodo($text: String!) {
+              createTodo(text: $text) {
+                id
+                text
+                completed
+              }
+            }
+          `}
           update={(proxy, { data, errors }) => {
             if (errors) {
               return;
             }
-            const oldData = proxy.readQuery<{ todos: Todo[] }>({ query: todoQuery });
+            const { todos } = proxy.readQuery<{ todos: Todo[] }>({
+              query: gql`
+                query Todos {
+                  todos {
+                    id
+                    text
+                    completed
+                  }
+                }
+              `,
+            })!;
             const newTodo = data!.createTodo!;
-            const newData = { todos: [...oldData!.todos, newTodo] };
-            proxy.writeQuery({
-              query: todoQuery,
-              data: newData,
-            });
+            const newData = { todos: [...todos, newTodo] };
+            proxy.writeData({ data: newData });
           }}
         >
-          {(createTodo, { client }) => (
+          {createTodo => (
             <Button
               className={classes.button}
               color="primary"
@@ -83,20 +99,12 @@ class TodoForm extends React.Component<Props, State> {
               size="small"
               disabled={sending || !text}
               onClick={async () => {
+                this.setState({ sending: true });
                 try {
-                  this.setState({ sending: true });
                   await runMutation(createTodo, { variables: { text } });
                   this.setState({ text: '', sending: false });
-                  client.mutate({
-                    mutation: setErrorMutation,
-                    variables: { message: '' },
-                  });
-                } catch (error) {
+                } catch {
                   this.setState({ sending: false });
-                  client.mutate({
-                    mutation: setErrorMutation,
-                    variables: { message: error.message },
-                  });
                 }
               }}
             >

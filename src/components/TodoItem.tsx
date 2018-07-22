@@ -6,14 +6,9 @@ import ListItemText from '@material-ui/core/ListItemText';
 import { StyleRulesCallback, WithStyles, withStyles } from '@material-ui/core/styles';
 import Typography from '@material-ui/core/Typography';
 import DeleteIcon from '@material-ui/icons/Delete';
+import gql from 'graphql-tag';
 import React from 'react';
 import { Mutation } from 'react-apollo';
-import {
-  deleteTodoMutation,
-  setErrorMutation,
-  setTodoCompletedMutation,
-  todoQuery,
-} from '../graphql/queries';
 import { Todo } from '../graphql/types';
 import { runMutation } from '../graphql/utils';
 
@@ -47,8 +42,17 @@ class TodoItem extends React.Component<Props, State> {
     const { classes, todo } = this.props;
     const textClass = todo.completed ? classes.strikeThrough : undefined;
     return (
-      <Mutation<Todo, { id: string; completed: boolean }> mutation={setTodoCompletedMutation}>
-        {(setTodoCompleted, { client }) => (
+      <Mutation<Todo, { id: string; completed: boolean }>
+        mutation={gql`
+          mutation SetTodoCompleted($id: ID!, $completed: Boolean!) {
+            setTodoCompleted(id: $id, completed: $completed) {
+              id
+              completed
+            }
+          }
+        `}
+      >
+        {setTodoCompleted => (
           <ListItem
             button
             dense
@@ -65,16 +69,8 @@ class TodoItem extends React.Component<Props, State> {
                   variables: { id: todo.id, completed: !todo.completed },
                 });
                 this.setState({ toggling: false });
-                client.mutate({
-                  mutation: setErrorMutation,
-                  variables: { message: '' },
-                });
-              } catch (error) {
+              } catch {
                 this.setState({ toggling: false });
-                client.mutate({
-                  mutation: setErrorMutation,
-                  variables: { message: error.message },
-                });
               }
             }}
           >
@@ -89,26 +85,28 @@ class TodoItem extends React.Component<Props, State> {
             </ListItemText>
             <ListItemSecondaryAction>
               <Mutation<boolean, { id: string }>
-                mutation={deleteTodoMutation}
+                mutation={gql`
+                  mutation DeleteTodo($id: ID!) {
+                    deleteTodo(id: $id)
+                  }
+                `}
                 update={(proxy, { errors }) => {
                   if (errors) {
                     return;
                   }
-                  const { todos } = proxy.readQuery<{ todos: Todo[] }>({ query: todoQuery })!;
-                  const deletedTodoIndex = todos.findIndex(({ id }) => id === todo.id);
-                  if (deletedTodoIndex === -1) {
-                    return;
-                  }
-                  const newData = {
-                    todos: [
-                      ...todos.slice(0, deletedTodoIndex),
-                      ...todos.slice(deletedTodoIndex + 1),
-                    ],
-                  };
-                  proxy.writeQuery({
-                    query: todoQuery,
-                    data: newData,
-                  });
+                  const { todos } = proxy.readQuery<{ todos: Todo[] }>({
+                    query: gql`
+                      query Todos {
+                        todos {
+                          id
+                          text
+                          completed
+                        }
+                      }
+                    `,
+                  })!;
+                  const newData = { todos: todos.filter(({ id }) => id !== todo.id) };
+                  proxy.writeData({ data: newData });
                 }}
               >
                 {deleteTodo => (
@@ -118,16 +116,8 @@ class TodoItem extends React.Component<Props, State> {
                         this.setState({ deleting: true });
                         try {
                           await runMutation(deleteTodo, { variables: { id: todo.id } });
-                          client.mutate({
-                            mutation: setErrorMutation,
-                            variables: { message: '' },
-                          });
-                        } catch (error) {
+                        } catch {
                           this.setState({ deleting: false });
-                          client.mutate({
-                            mutation: setErrorMutation,
-                            variables: { message: error.message },
-                          });
                         }
                       }}
                     />
