@@ -8,8 +8,14 @@ import Typography from '@material-ui/core/Typography';
 import DeleteIcon from '@material-ui/icons/Delete';
 import React from 'react';
 import { Mutation } from 'react-apollo';
-import { deleteTodoMutation, setTodoCompletedMutation, todoQuery } from '../graphql/queries';
+import {
+  deleteTodoMutation,
+  setErrorMutation,
+  setTodoCompletedMutation,
+  todoQuery,
+} from '../graphql/queries';
 import { Todo } from '../graphql/types';
+import { runMutation } from '../graphql/utils';
 
 type Styles = 'strikeThrough';
 
@@ -19,31 +25,65 @@ const styles: StyleRulesCallback<Styles> = _ => ({
   },
 });
 
-type OwnProps = { todo: Todo };
+type OwnProps = {
+  todo: Todo;
+  error: string;
+};
+
 type Props = OwnProps & WithStyles<Styles>;
-type State = { deleting: boolean; error: Error | null };
+
+type State = {
+  deleting: boolean;
+  toggling: boolean;
+};
 
 class TodoItem extends React.Component<Props, State> {
-  public readonly state: State = { deleting: false, error: null };
+  public readonly state: State = {
+    deleting: false,
+    toggling: false,
+  };
 
   public render() {
     const { classes, todo } = this.props;
     const textClass = todo.completed ? classes.strikeThrough : undefined;
     return (
       <Mutation<Todo, { id: string; completed: boolean }> mutation={setTodoCompletedMutation}>
-        {setTodoCompleted => (
+        {(setTodoCompleted, { client }) => (
           <ListItem
             button
             dense
             divider
             disableGutters
-            onClick={() =>
-              setTodoCompleted({
-                variables: { id: todo.id, completed: !todo.completed },
-              })
-            }
+            disabled={this.state.deleting}
+            onClick={async () => {
+              if (this.state.toggling) {
+                return;
+              }
+              this.setState({ toggling: true });
+              try {
+                await runMutation(setTodoCompleted, {
+                  variables: { id: todo.id, completed: !todo.completed },
+                });
+                this.setState({ toggling: false });
+                client.mutate({
+                  mutation: setErrorMutation,
+                  variables: { message: '' },
+                });
+              } catch (error) {
+                this.setState({ toggling: false });
+                client.mutate({
+                  mutation: setErrorMutation,
+                  variables: { message: error.message },
+                });
+              }
+            }}
           >
-            <Checkbox checked={todo.completed} tabIndex={-1} disableRipple />
+            <Checkbox
+              checked={todo.completed}
+              tabIndex={-1}
+              disableRipple
+              disabled={this.state.toggling}
+            />
             <ListItemText disableTypography>
               <Typography className={textClass}>{todo.text}</Typography>
             </ListItemText>
@@ -77,13 +117,17 @@ class TodoItem extends React.Component<Props, State> {
                       onClick={async () => {
                         this.setState({ deleting: true });
                         try {
-                          const result = await deleteTodo({ variables: { id: todo.id } });
-                          const error = result ? (result.errors ? result.errors[0] : null) : null;
-                          if (error) {
-                            this.setState({ deleting: false, error });
-                          }
+                          await runMutation(deleteTodo, { variables: { id: todo.id } });
+                          client.mutate({
+                            mutation: setErrorMutation,
+                            variables: { message: '' },
+                          });
                         } catch (error) {
-                          this.setState({ deleting: false, error });
+                          this.setState({ deleting: false });
+                          client.mutate({
+                            mutation: setErrorMutation,
+                            variables: { message: error.message },
+                          });
                         }
                       }}
                     />

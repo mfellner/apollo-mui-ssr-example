@@ -1,7 +1,7 @@
 import { GraphQLSchema } from 'graphql';
 import gql from 'graphql-tag';
 import { makeExecutableSchema } from 'graphql-tools';
-import getResolvers from './resolvers';
+import { getResolvers } from './resolvers';
 
 const schema = gql`
   type Todo {
@@ -10,9 +10,14 @@ const schema = gql`
     completed: Boolean
   }
 
+  type Error {
+    message: String
+  }
+
   type Query {
     todos: [Todo]
     todo(id: String!): Todo
+    error: Error
   }
 
   type Mutation {

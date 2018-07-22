@@ -57,10 +57,9 @@ const viewHandler: RequestHandler = async (req, res) => {
     css,
     body,
   });
-  const html = ReactDOM.renderToStaticMarkup(view);
 
   res.write('<!DOCTYPE html>');
-  res.end(html);
+  ReactDOM.renderToNodeStream(view).pipe(res);
 };
 
 const staticHandler: RequestHandler = (req, res) => {

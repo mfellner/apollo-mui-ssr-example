@@ -10,6 +10,12 @@ export const todoQuery = gql`
   }
 `;
 
+export const setErrorMutation = gql`
+  mutation SetError($message: String) {
+    setError(message: $message) @client
+  }
+`;
+
 export const createTodoMutation = gql`
   mutation CreateTodo($text: String!) {
     createTodo(text: $text) {

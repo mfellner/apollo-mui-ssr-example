@@ -15,11 +15,14 @@ const todos: { [id: string]: Todo } = {
   },
 };
 
-export default function getResolvers(): IResolvers {
+export function getResolvers(): IResolvers {
   return {
     Query: {
       todos: (source, args, context, info): Todo[] => Object.values(todos),
       todo: (source, { id }, context, info): Todo | undefined => todos[id],
+      error: (source, args, context, info) => ({
+        message: '',
+      }),
     },
     Mutation: {
       createTodo: (source, { text }, context, info) => {
