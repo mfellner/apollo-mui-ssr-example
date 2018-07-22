@@ -107,7 +107,14 @@
   version "0.13.3"
   resolved "https://registry.yarnpkg.com/@types/graphql/-/graphql-0.13.3.tgz#23af65796d341f93ef5b485138bd52c67786452d"
 
-"@types/jss@9.5.3", "@types/jss@^9.5.3":
+"@types/jss@9.5.4":
+  version "9.5.4"
+  resolved "https://registry.yarnpkg.com/@types/jss/-/jss-9.5.4.tgz#89a4ee32a14a8d2937187b1a7f443750e964a74d"
+  dependencies:
+    csstype "^2.0.0"
+    indefinite-observable "^1.0.1"
+
+"@types/jss@^9.5.3":
   version "9.5.3"
   resolved "https://registry.yarnpkg.com/@types/jss/-/jss-9.5.3.tgz#0c106de3fe0b324cd4173fac7dab26c12cda624e"
   dependencies:
@@ -3476,9 +3483,9 @@ serialize-javascript@^1.4.0:
   version "1.5.0"
   resolved "https://registry.yarnpkg.com/serialize-javascript/-/serialize-javascript-1.5.0.tgz#1aa336162c88a890ddad5384baebc93a655161fe"
 
-serve-handler@3.3.0:
-  version "3.3.0"
-  resolved "https://registry.yarnpkg.com/serve-handler/-/serve-handler-3.3.0.tgz#bf1af88d244850cb7fa5bddef5c5a9ccdae1e8d3"
+serve-handler@3.4.0:
+  version "3.4.0"
+  resolved "https://registry.yarnpkg.com/serve-handler/-/serve-handler-3.4.0.tgz#a3715b908f4f5da2bdf3b89b4bd6f843d7b7064c"
   dependencies:
     bytes "3.0.0"
     content-disposition "0.5.2"
